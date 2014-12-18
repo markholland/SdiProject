@@ -1,0 +1,12 @@
+/**
+ * This class is the implemetation object for your IDL interface.
+ *
+ * Let the Eclipse complete operations code by choosing 'Add unimplemented methods'.
+ */
+public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
+	/**
+	 * Constructor for CamaraIntServerImpl 
+	 */
+	public CamaraIntServerImpl() {
+	}
+}
