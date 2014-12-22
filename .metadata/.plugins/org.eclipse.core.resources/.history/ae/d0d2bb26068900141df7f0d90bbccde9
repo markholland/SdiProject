@@ -26,21 +26,20 @@ import corba.robot.RobotSeguidorIntHelper;
  * Let the Eclipse complete operations code by choosing 'Add unimplemented methods'.
  */
 public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
-
+	
 	org.omg.CORBA.ORB orb;
-
+	
 	private LinkedList<String> listaConsolas = new LinkedList<String>();
 	private LinkedList<String> listaRobots = new LinkedList<String>();
-	private LinkedList<String> bufferRobots = new LinkedList<String>();
 	private LinkedList<String> listaFallos = new LinkedList<String>();
 	private LinkedList<EstadoRobotD> listaEstados = new LinkedList<EstadoRobotD>();
 	private int numConsolas;
 	private int numRobots;
 	private Escenario escenario;
-	//private EscenarioD escenarioD;
-
+	private EscenarioD escenarioD;
+	
 	IPYPortD ipyport;
-
+	
 	/**
 	 * Constructor for CamaraIntServerImpl 
 	 */
@@ -48,19 +47,20 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 		try {
 			escenario = new Escenario("dibujo");
 		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
 			System.out.println("Couldn't find dibujo file");
 			e.printStackTrace();
 		}
 	}
 
 	@Override
-	public synchronized void BajaConsola(String arg0) {
+	public void BajaConsola(String arg0) {
 		// Remove the IOR
 		listaConsolas.remove(arg0);
 	}
 
 	@Override
-	public synchronized void BajaRobot(String arg0) {
+	public void BajaRobot(String arg0) {
 		// Remove the robot ref
 		listaRobots.remove(arg0);
 	}
@@ -68,18 +68,18 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 	@Override
 	public void ModificarEscenario(EscenarioD arg0) {
 		escenario = new Escenario(arg0);
-
+		
 		// Notify robots and consoles
 		for (String c : listaConsolas) {
 			ConsolaInt cI = ConsolaIntHelper.narrow(orb.string_to_object(c));
 			cI.ModificarEscenario(escenario.toEscenarioD());
 		}
-
+		
 		for (String r : listaRobots) {
 			RobotSeguidorInt rI = RobotSeguidorIntHelper.narrow(orb.string_to_object(r));
 			rI.ModificarEscenario(escenario.toEscenarioD());
 		}
-
+		
 	}
 
 	@Override
@@ -99,75 +99,65 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 
 	@Override
 	public ListaSuscripcionD ObtenerLista() {
-
+		
 		return new ListaSuscripcionD(listaRobots.toArray(new String[0]), listaConsolas.toArray(new String[0]));
 	}
 
 	@Override
-	public synchronized suscripcionD SuscribirConsola(String arg0) {
-
+	public suscripcionD SuscribirConsola(String arg0) {
+		
 		suscripcionD consolaSus;
 		listaConsolas.add(arg0);
-
+		
 		consolaSus = new suscripcionD(numConsolas,ipyport, escenario.toEscenarioD());
 		numConsolas++;
-
+		
 		return consolaSus;
 	}
 
 	@Override
-	public synchronized suscripcionD SuscribirRobot(String arg0) {
-
-		synchronized(bufferRobots) {
-			suscripcionD robotSubscription;
-			bufferRobots.add(arg0);
-			robotSubscription = new suscripcionD(numRobots, ipyport, escenario.toEscenarioD());
-			numRobots++;
-			return robotSubscription;
-		}
+	public suscripcionD SuscribirRobot(String arg0) {
+		
+		suscripcionD robotSus;
+		listaRobots.add(arg0);
+		
+		robotSus = new suscripcionD(numRobots, ipyport, escenario.toEscenarioD());
+		numRobots++;
+		
+		return robotSus;
 	}
-
+	
 	public class camaraDifusion extends Thread{
-
-		private EstadoRobotDHolder estadoRobotHolder = new EstadoRobotDHolder();
-
+		
+		private EstadoRobotDHolder ERDH = new EstadoRobotDHolder();
+		
 		public camaraDifusion() {
-
+			
 		}
 
 		@Override
 		public void run() {
-
-			DifusionMulticast difusion = new DifusionMulticast(ipyport);
-
+			
+			DifusionMulticast DM = new DifusionMulticast(ipyport);
+			
 			while(true) {
 				listaEstados.clear();
 				listaFallos.clear();
-				
-				// Add robots from buffer
-				synchronized(bufferRobots){
-					for (String b : bufferRobots){
-						listaRobots.add(b);
-					}	
-				// Empty buffer safely
-				bufferRobots.clear();
-				}
-				
 				for (String r : listaRobots) {	
 					RobotSeguidorInt rI = RobotSeguidorIntHelper.narrow(orb.string_to_object(r));
 					try {
-						rI.ObtenerEstado(estadoRobotHolder);
-						listaEstados.add(estadoRobotHolder.value);
+						rI.ObtenerEstado(ERDH);
+						listaEstados.add(ERDH.value);
 					} catch(Exception e) {
 						listaFallos.add(r);
 					}
 				}
-
+				
 				// difusion
-				difusion.sendObject(new InstantaneaD(listaEstados.toArray(new EstadoRobotD[0])));
+				DM.sendObject(new InstantaneaD(listaEstados.toArray(new EstadoRobotD[0])));
 				// quitar fallos
 				listaRobots.removeAll(listaFallos);
-
+			
 				try {
 					Thread.sleep(500);
 				} catch (InterruptedException e) {
@@ -176,7 +166,7 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 				}
 			}
 		}
-
+		
 	}
 
 	public void start() {

@@ -37,7 +37,7 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 	private int numConsolas;
 	private int numRobots;
 	private Escenario escenario;
-	//private EscenarioD escenarioD;
+	private EscenarioD escenarioD;
 
 	IPYPortD ipyport;
 
@@ -48,6 +48,7 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 		try {
 			escenario = new Escenario("dibujo");
 		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
 			System.out.println("Couldn't find dibujo file");
 			e.printStackTrace();
 		}
@@ -119,17 +120,17 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 	public synchronized suscripcionD SuscribirRobot(String arg0) {
 
 		synchronized(bufferRobots) {
-			suscripcionD robotSubscription;
+			suscripcionD robotSus;
 			bufferRobots.add(arg0);
-			robotSubscription = new suscripcionD(numRobots, ipyport, escenario.toEscenarioD());
+			robotSus = new suscripcionD(numRobots, ipyport, escenario.toEscenarioD());
 			numRobots++;
-			return robotSubscription;
+			return robotSus;
 		}
 	}
 
 	public class camaraDifusion extends Thread{
 
-		private EstadoRobotDHolder estadoRobotHolder = new EstadoRobotDHolder();
+		private EstadoRobotDHolder ERDH = new EstadoRobotDHolder();
 
 		public camaraDifusion() {
 
@@ -138,7 +139,7 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 		@Override
 		public void run() {
 
-			DifusionMulticast difusion = new DifusionMulticast(ipyport);
+			DifusionMulticast DM = new DifusionMulticast(ipyport);
 
 			while(true) {
 				listaEstados.clear();
@@ -156,15 +157,15 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 				for (String r : listaRobots) {	
 					RobotSeguidorInt rI = RobotSeguidorIntHelper.narrow(orb.string_to_object(r));
 					try {
-						rI.ObtenerEstado(estadoRobotHolder);
-						listaEstados.add(estadoRobotHolder.value);
+						rI.ObtenerEstado(ERDH);
+						listaEstados.add(ERDH.value);
 					} catch(Exception e) {
 						listaFallos.add(r);
 					}
 				}
 
 				// difusion
-				difusion.sendObject(new InstantaneaD(listaEstados.toArray(new EstadoRobotD[0])));
+				DM.sendObject(new InstantaneaD(listaEstados.toArray(new EstadoRobotD[0])));
 				// quitar fallos
 				listaRobots.removeAll(listaFallos);
 

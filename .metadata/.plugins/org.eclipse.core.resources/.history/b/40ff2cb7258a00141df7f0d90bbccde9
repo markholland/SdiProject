@@ -37,7 +37,7 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 	private int numConsolas;
 	private int numRobots;
 	private Escenario escenario;
-	//private EscenarioD escenarioD;
+	private EscenarioD escenarioD;
 
 	IPYPortD ipyport;
 

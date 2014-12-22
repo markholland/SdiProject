@@ -74,9 +74,9 @@ public class RobotSeguidorIntServerImpl extends corba.robot.RobotSeguidorIntPOA 
 	@Override
 	public void ObtenerEstado(EstadoRobotDHolder arg0) {
 		
-		EstadoRobotD estadoRobot = new EstadoRobotD(_nombre, _id, _IORrob, null, robot.posicionRobot(), _posObj, _idLider);
+		EstadoRobotD ERD = new EstadoRobotD(_nombre, _id, _IORrob, null, robot.posicionRobot(), _posObj, _idLider);
 		
-		arg0.value = estadoRobot;
+		arg0.value = ERD;
 		
 	}
 	

@@ -74,9 +74,9 @@ public class RobotSeguidorIntServerImpl extends corba.robot.RobotSeguidorIntPOA 
 	@Override
 	public void ObtenerEstado(EstadoRobotDHolder arg0) {
 		
-		EstadoRobotD estadoRobot = new EstadoRobotD(_nombre, _id, _IORrob, null, robot.posicionRobot(), _posObj, _idLider);
+		EstadoRobotD ERD = new EstadoRobotD(_nombre, _id, _IORrob, null, robot.posicionRobot(), _posObj, _idLider);
 		
-		arg0.value = estadoRobot;
+		arg0.value = ERD;
 		
 	}
 	
@@ -95,19 +95,19 @@ public class RobotSeguidorIntServerImpl extends corba.robot.RobotSeguidorIntPOA 
 			Destino dest = new Destino();
 			
 			_posObj	= new PosicionD(200,40);
-			suscripcionD subscription = camara.SuscribirRobot(_IORrob);
+			suscripcionD SD = camara.SuscribirRobot(_IORrob);
 			
-			_id = subscription.id;
-			ipyport = subscription.iport;
-			escenarioD = subscription.esc;
+			_id = SD.id;
+			ipyport = SD.iport;
+			escenarioD = SD.esc;
 			escenario = new Escenario(escenarioD);
 			robot = new RobotKhepera(new PosicionD(0,0), escenario, 0);
 					
-			DifusionMulticast difusion = new DifusionMulticast(ipyport);
+			DifusionMulticast DM = new DifusionMulticast(ipyport);
 			
 			while(true){
 				
-				InstantaneaD ID = (InstantaneaD)difusion.receiveObject();
+				InstantaneaD ID = (InstantaneaD)DM.receiveObject();
 				
 				// Not following anyone
 				if(_idLider != -1) {	
