@@ -21,7 +21,7 @@ import corba.robot.RobotSeguidorInt;
 import corba.robot.RobotSeguidorIntHelper;
 
 /**
- * This class is the implemetation object for your IDL interface.
+ * This class is the implementation object for your IDL interface.
  *
  * Let the Eclipse complete operations code by choosing 'Add unimplemented methods'.
  */
@@ -55,7 +55,7 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 
 	@Override
 	public synchronized void BajaConsola(String arg0) {
-		// Remove the IOR
+		// Remove the console ref
 		listaConsolas.remove(arg0);
 	}
 
@@ -70,16 +70,19 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 		escenario = new Escenario(arg0);
 
 		// Notify robots and consoles
-		for (String c : listaConsolas) {
-			ConsolaInt cI = ConsolaIntHelper.narrow(orb.string_to_object(c));
-			cI.ModificarEscenario(escenario.toEscenarioD());
+		synchronized (listaConsolas) {
+			for (String c : listaConsolas) {
+				ConsolaInt cI = ConsolaIntHelper.narrow(orb.string_to_object(c));
+				cI.ModificarEscenario(escenario.toEscenarioD());
+			}
 		}
-
-		for (String r : listaRobots) {
-			RobotSeguidorInt rI = RobotSeguidorIntHelper.narrow(orb.string_to_object(r));
-			rI.ModificarEscenario(escenario.toEscenarioD());
+		
+		synchronized (listaRobots) {
+			for (String r : listaRobots) {
+				RobotSeguidorInt rI = RobotSeguidorIntHelper.narrow(orb.string_to_object(r));
+				rI.ModificarEscenario(escenario.toEscenarioD());
+			}
 		}
-
 	}
 
 	@Override
@@ -104,15 +107,17 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 	}
 
 	@Override
-	public synchronized suscripcionD SuscribirConsola(String arg0) {
+	public suscripcionD SuscribirConsola(String arg0) {
 
-		suscripcionD consolaSus;
-		listaConsolas.add(arg0);
+		suscripcionD consoleSubscription;
+		synchronized (listaConsolas) {
+			listaConsolas.add(arg0);
+		}
 
-		consolaSus = new suscripcionD(numConsolas,ipyport, escenario.toEscenarioD());
+		consoleSubscription = new suscripcionD(numConsolas,ipyport, escenario.toEscenarioD());
 		numConsolas++;
 
-		return consolaSus;
+		return consoleSubscription;
 	}
 
 	@Override
@@ -153,21 +158,26 @@ public class CamaraIntServerImpl extends corba.camara.CamaraIntPOA {
 				bufferRobots.clear();
 				}
 				
-				for (String r : listaRobots) {	
-					RobotSeguidorInt rI = RobotSeguidorIntHelper.narrow(orb.string_to_object(r));
-					try {
-						rI.ObtenerEstado(estadoRobotHolder);
-						listaEstados.add(estadoRobotHolder.value);
-					} catch(Exception e) {
-						listaFallos.add(r);
+				synchronized (listaRobots) {
+					for (String r : listaRobots) {	
+						RobotSeguidorInt rI = RobotSeguidorIntHelper.narrow(orb.string_to_object(r));
+						try {
+							rI.ObtenerEstado(estadoRobotHolder);
+							listaEstados.add(estadoRobotHolder.value);
+						} catch(Exception e) {
+							listaFallos.add(r);
+						}
 					}
 				}
 
 				// difusion
 				difusion.sendObject(new InstantaneaD(listaEstados.toArray(new EstadoRobotD[0])));
+				
 				// quitar fallos
-				listaRobots.removeAll(listaFallos);
-
+				synchronized (listaRobots) {
+					listaRobots.removeAll(listaFallos);
+				}
+				
 				try {
 					Thread.sleep(500);
 				} catch (InterruptedException e) {

@@ -3,3 +3,7 @@
 1419285385441	Rename local variable 'SD'
 1419285400417	Rename local variable 'DM'
 1419285430432	Rename local variable 'ERD'
+1419525948476	Rename field '_idLider'
+1419525967274	Rename field '_posObj'
+1419525988833	Rename field '_IORrob'
+1419526013918	Rename field '_id'

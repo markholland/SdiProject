@@ -63,8 +63,7 @@ public class Server_AOM {
 			//ps.close();
 
 			System.out.println("CORBA Server ready...");
-
-			
+	
 			servant.ipyport = new IPYPortD("228.20.20.1", 5006);
 			servant.orb = orb;
 			servant.start();

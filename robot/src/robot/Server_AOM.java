@@ -64,7 +64,7 @@ public class Server_AOM {
 
 			System.out.println("CORBA Server ready...");
 
-			CamaraInt camara = null;
+			//CamaraInt camara = null;
 			org.omg.CORBA.Object obj2 = null;
 			org.omg.CORBA.Object obj3 = null;
 			
@@ -72,7 +72,7 @@ public class Server_AOM {
 			NamingContextExt nc = NamingContextExtHelper.narrow(obj2);
 			obj3 = nc.resolve_str("Camara");
 			servant.camara = corba.camara.CamaraIntHelper.narrow(obj3);
-			servant._IORrob = orb.object_to_string(obj); 
+			servant.IORrob = orb.object_to_string(obj); 
 			servant.start();
 			
 			// Wait for incoming requests

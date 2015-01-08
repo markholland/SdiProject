@@ -21,7 +21,7 @@ import corba.khepera.robot.PosicionD;
 import corba.robot.RobotSeguidorInt;
 
 /**
- * This class is the implemetation object for your IDL interface.
+ * This class is the implementation object for your IDL interface.
  *
  * Let the Eclipse complete operations code by choosing 'Add unimplemented methods'.
  */
@@ -32,11 +32,10 @@ public class RobotSeguidorIntServerImpl extends corba.robot.RobotSeguidorIntPOA 
 	private IPYPortD ipyport;
 	
 	private String _nombre = "nombre";
-	private int _id;
-	public String _IORrob;
-	private PuntosRobotD _puntrob;
-	private PosicionD _posObj;
-	private int _idLider = -1;
+	private int robotId;
+	public String IORrob;
+	private PosicionD posicionObjetivo;
+	private int idLider = -1;
 	
 	private RobotKhepera robot;
 	
@@ -58,12 +57,12 @@ public class RobotSeguidorIntServerImpl extends corba.robot.RobotSeguidorIntPOA 
 
 	@Override
 	public void ModificarLider(int arg0) {
-		_idLider = arg0;
+		idLider = arg0;
 	}
 
 	@Override
 	public void ModificarObjetivo(PosicionD arg0) {
-		_posObj = arg0;
+		posicionObjetivo = arg0;
 	}
 
 	@Override
@@ -74,7 +73,7 @@ public class RobotSeguidorIntServerImpl extends corba.robot.RobotSeguidorIntPOA 
 	@Override
 	public void ObtenerEstado(EstadoRobotDHolder arg0) {
 		
-		EstadoRobotD estadoRobot = new EstadoRobotD(_nombre, _id, _IORrob, null, robot.posicionRobot(), _posObj, _idLider);
+		EstadoRobotD estadoRobot = new EstadoRobotD(_nombre, robotId, IORrob, null, robot.posicionRobot(), posicionObjetivo, idLider);
 		
 		arg0.value = estadoRobot;
 		
@@ -94,10 +93,10 @@ public class RobotSeguidorIntServerImpl extends corba.robot.RobotSeguidorIntPOA 
 			brat = new Braitenberg();
 			Destino dest = new Destino();
 			
-			_posObj	= new PosicionD(200,40);
-			suscripcionD subscription = camara.SuscribirRobot(_IORrob);
+			posicionObjetivo	= new PosicionD(200, 40);
+			suscripcionD subscription = camara.SuscribirRobot(IORrob);
 			
-			_id = subscription.id;
+			robotId = subscription.id;
 			ipyport = subscription.iport;
 			escenarioD = subscription.esc;
 			escenario = new Escenario(escenarioD);
@@ -109,19 +108,19 @@ public class RobotSeguidorIntServerImpl extends corba.robot.RobotSeguidorIntPOA 
 				
 				InstantaneaD ID = (InstantaneaD)difusion.receiveObject();
 				
-				// Not following anyone
-				if(_idLider != -1) {	
+				// Following someone
+				if(idLider != -1) {	
 					for(EstadoRobotD ERD : ID.estadorobs) {		
-						if(ERD.id == _idLider) {
-							_posObj = ERD.puntrob.centro;
-						}	
+						if(ERD.id == idLider) {
+							posicionObjetivo = ERD.puntrob.centro;
+						}
 					}	
 				}
 				
 				float[] sensors = robot.leerSensores();
 				IzqDer vel = brat.calcularVelocidad(sensors);
 				Polares polares = robot.posicionPolares();
-				Trayectoria tray = new Trayectoria(polares, _posObj);
+				Trayectoria tray = new Trayectoria(polares, posicionObjetivo);
 				IzqDer vel2 = dest.calcularVelocidad(tray);
 				vel2.izq += vel.izq/90;
 				vel2.der += vel.der/90;
